@@ -4883,6 +4883,27 @@ void func_80832888(Player* this, PlayState* play) {
     }
 }
 
+u8 gWalkSpeedToggle1;
+u8 gWalkSpeedToggle2;
+
+void ProcessSpeedModifiers(f32* outSpeedTarget) {
+    if (CVarGetInteger("gEnhancements.EnableWalkModify", 0) && !CVarGetInteger("gEnhancements.WalkModifierDoesntChangeJump", 0)) {
+        if (CVarGetInteger("gEnhancements.WalkSpeedToggle", 0)) {
+            if (gWalkSpeedToggle1) {
+                *outSpeedTarget *= CVarGetFloat("gEnhancements.WalkModifierOne", 1.0f);
+            } else if (gWalkSpeedToggle2) {
+                *outSpeedTarget *= CVarGetFloat("gEnhancements.WalkModifierTwo", 1.0f);
+            }
+        } else {
+            if (CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_MODIFIER1)) {
+                *outSpeedTarget *= CVarGetFloat("gEnhancements.WalkModifierOne", 1.0f);
+            } else if (CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_MODIFIER2)) {
+                *outSpeedTarget *= CVarGetFloat("gEnhancements.WalkModifierTwo", 1.0f);
+            }
+        }
+    }
+}
+
 /**
  * These defines exist to simplify the variable used to toggle the different speed modes.
  * While the `speedMode` variable is a float and can contain a non-boolean value,
@@ -4961,11 +4982,15 @@ s32 Player_CalcSpeedAndYawFromControlStick(PlayState* play, Player* this, f32* o
             *outSpeedTarget = (*outSpeedTarget * 0.14f) - (8.0f * floorPitchInfluence * floorPitchInfluence);
             *outSpeedTarget = CLAMP(*outSpeedTarget, 0.0f, speedCap);
 
+            ProcessSpeedModifiers(outSpeedTarget);
+
             //! FAKE
             if (floorPitchInfluence) {}
 
             return true;
         }
+
+        ProcessSpeedModifiers(outSpeedTarget);
     }
 
     return false;
@@ -12641,6 +12666,15 @@ void Player_Update(Actor* thisx, PlayState* play) {
         }
     }
 
+    int test1 = CVarGetInteger("gEnableWalkModify", 0);
+    int test2 = CVarGetInteger("gEnhancements.WalkSpeedToggle", 0);
+
+    if (CVarGetInteger("gEnableWalkModify", 0) && CVarGetInteger("gEnhancements.WalkSpeedToggle", 0)) {
+        if (CHECK_BTN_ALL(sPlayerControlInput->press.button, BTN_MODIFIER2)) {
+            gWalkSpeedToggle2 = !gWalkSpeedToggle2;
+        }
+    }
+
     GameInteractor_ExecuteOnPassPlayerInputs(&input);
 
     Player_UpdateCommon(this, play, &input);
@@ -13033,8 +13067,26 @@ s32 func_80847190(PlayState* play, Player* this, s32 arg2) {
 }
 
 void func_8084748C(Player* this, f32* speed, f32 speedTarget, s16 yawTarget) {
+
+    f32 swimMod = 1.0f;
+    if (CVarGetInteger("gEnableWalkModify", 0) == 1) {
+        if (CVarGetInteger("gWalkSpeedToggle", 0) == 1) {
+            if (gWalkSpeedToggle1) {
+                swimMod *= CVarGetFloat("gSwimModifierOne", 1.0f);
+            } else if (gWalkSpeedToggle2) {
+                swimMod *= CVarGetFloat("gSwimModifierTwo", 1.0f);
+            }
+        } else {
+            if (CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_MODIFIER1)) {
+                swimMod *= CVarGetFloat("gSwimModifierOne", 1.0f);
+            } else if (CHECK_BTN_ALL(sPlayerControlInput->cur.button, BTN_MODIFIER2)) {
+                swimMod *= CVarGetFloat("gSwimModifierTwo", 1.0f);
+            }
+        }
+    }
+
     f32 incrStep = this->skelAnime.curFrame - 10.0f;
-    f32 maxSpeed = (R_RUN_SPEED_LIMIT / 100.0f) * 0.8f;
+    f32 maxSpeed = (R_RUN_SPEED_LIMIT / 100.0f) * 0.8f * swimMod;
 
     if (*speed > maxSpeed) {
         *speed = maxSpeed;
@@ -13047,7 +13099,7 @@ void func_8084748C(Player* this, f32* speed, f32 speedTarget, s16 yawTarget) {
         incrStep = 0.0f;
     }
 
-    Math_AsymStepToF(speed, speedTarget * 0.8f, incrStep, (fabsf(*speed) * 0.02f) + 0.05f);
+    Math_AsymStepToF(speed, speedTarget * 0.8f * swimMod, incrStep, (fabsf(*speed) * 0.02f) + 0.05f);
     Math_ScaledStepToS(&this->currentYaw, yawTarget, 1600); // 1 ESS turn, also one frame of first-person rotation
 }
 
