@@ -13029,6 +13029,7 @@ void Player_Destroy(Actor* thisx, PlayState* play) {
     func_80831454(this);
 }
 
+/*
 s32 func_80847190(PlayState* play, Player* this, s32 arg2) {
     s32 pad;
     s16 var_s0;
@@ -13063,6 +13064,115 @@ s32 func_80847190(PlayState* play, Player* this, s32 arg2) {
 
     this->unk_AA6 |= 2;
 
+    return func_80832754(this, (play->bButtonAmmoPlusOne != 0) || func_800B7128(this) || func_8082EF20(this));
+}
+*/
+s32 func_80847190(PlayState* play, Player* this, s32 arg2) {
+    s32 temp1 = 0;
+    s16 temp2 = 0;
+    s16 temp3 = 0;
+    s8 invertXAxisMulti = ((CVarGetInteger("gCameraControls.InvertAimingXAxis", 0) && !CVarGetInteger("gMirroredWorld", 0)) ||
+                           (!CVarGetInteger("gCameraControls.InvertAimingXAxis", 0) && CVarGetInteger("gMirroredWorld", 0)))
+                              ? -1
+                              : 1;
+    s8 invertYAxisMulti = CVarGetInteger("gCameraControls.InvertAimingYAxis", 1) ? 1 : -1;
+    f32 xAxisMulti = CVarGetFloat("gCameraControls.FirstPersonCameraSensitivityX", 1.0f);
+    f32 yAxisMulti = CVarGetFloat("gCameraControls.FirstPersonCameraSensitivityY", 1.0f);
+
+    if (!func_800B7128(this) && !func_8082EF20(this) && (arg2 == 0)) { // First person without weapon
+        // Y Axis
+        if (!CVarGetInteger("gCameraControls.MoveWhileFirstPerson", 0)) {
+            temp2 += sPlayerControlInput->rel.stick_y * 240.0f * invertYAxisMulti * yAxisMulti;
+        }
+        if (CVarGetInteger("gCameraControls.RightStickAiming", 0) && fabsf(sPlayerControlInput->cur.right_stick_y) > 15.0f) {
+            temp2 += sPlayerControlInput->cur.right_stick_y * 240.0f * invertYAxisMulti * yAxisMulti;
+        }
+        if (fabsf(sPlayerControlInput->cur.gyro_x) > 0.01f) {
+            temp2 += (-sPlayerControlInput->cur.gyro_x) * 750.0f;
+        }
+        if (CVarGetInteger("gCameraControls.DisableAutoCenterViewFirstPerson", 0)) {
+            this->actor.focus.rot.x += temp2 * 0.1f;
+            this->actor.focus.rot.x = CLAMP(this->actor.focus.rot.x, -14000, 14000);
+        } else {
+            Math_SmoothStepToS(&this->actor.focus.rot.x, temp2, 14, 4000, 30);
+        }
+
+        // X Axis
+        temp2 = 0;
+        if (!CVarGetInteger("gCameraControls.MoveWhileFirstPerson", 0)) {
+            temp2 += sPlayerControlInput->rel.stick_x * -16.0f * invertXAxisMulti * xAxisMulti;
+        }
+        if (CVarGetInteger("gCameraControls.RightStickAiming", 0) && fabsf(sPlayerControlInput->cur.right_stick_x) > 15.0f) {
+            temp2 += sPlayerControlInput->cur.right_stick_x * -16.0f * invertXAxisMulti * xAxisMulti;
+        }
+        if (fabsf(sPlayerControlInput->cur.gyro_y) > 0.01f) {
+            temp2 += (sPlayerControlInput->cur.gyro_y) * 750.0f * invertXAxisMulti;
+        }
+        temp2 = CLAMP(temp2, -3000, 3000);
+        this->actor.focus.rot.y += temp2;
+    } else { // First person with weapon
+        // Y Axis
+        temp1 = (this->stateFlags1 & PLAYER_STATE1_800000) ? 3500 : 14000;
+
+        if (!CVarGetInteger("gCameraControls.MoveWhileFirstPerson", 0)) {
+            temp3 += ((sPlayerControlInput->rel.stick_y >= 0) ? 1 : -1) *
+                     (s32)((1.0f - Math_CosS(sPlayerControlInput->rel.stick_y * 200)) * 1500.0f) * invertYAxisMulti *
+                     yAxisMulti;
+        }
+        if (CVarGetInteger("gCameraControls.RightStickAiming", 0) && fabsf(sPlayerControlInput->cur.right_stick_y) > 15.0f) {
+            temp3 += ((sPlayerControlInput->cur.right_stick_y >= 0) ? 1 : -1) *
+                     (s32)((1.0f - Math_CosS(sPlayerControlInput->cur.right_stick_y * 200)) * 1500.0f) * invertYAxisMulti *
+                     yAxisMulti;
+        }
+        if (fabsf(sPlayerControlInput->cur.gyro_x) > 0.01f) {
+            temp3 += (-sPlayerControlInput->cur.gyro_x) * 750.0f;
+        }
+        this->actor.focus.rot.x += temp3;
+        this->actor.focus.rot.x = CLAMP(this->actor.focus.rot.x, -temp1, temp1);
+
+        // X Axis
+        temp1 = 19114;
+        temp2 = this->actor.focus.rot.y - this->actor.shape.rot.y;
+        temp3 = 0;
+        if (!CVarGetInteger("gCameraControls.MoveWhileFirstPerson", 0)) {
+            temp3 = ((sPlayerControlInput->rel.stick_x >= 0) ? 1 : -1) *
+                    (s32)((1.0f - Math_CosS(sPlayerControlInput->rel.stick_x * 200)) * -1500.0f) * invertXAxisMulti *
+                    xAxisMulti;
+        }
+        if (CVarGetInteger("gCameraControls.RightStickAiming", 0) && fabsf(sPlayerControlInput->cur.right_stick_x) > 15.0f) {
+            temp3 += ((sPlayerControlInput->cur.right_stick_x >= 0) ? 1 : -1) *
+                     (s32)((1.0f - Math_CosS(sPlayerControlInput->cur.right_stick_x * 200)) * -1500.0f) * invertXAxisMulti *
+                     xAxisMulti;
+        }
+        if (fabsf(sPlayerControlInput->cur.gyro_y) > 0.01f) {
+            temp3 += (sPlayerControlInput->cur.gyro_y) * 750.0f * invertXAxisMulti;
+        }
+        temp2 += temp3;
+        this->actor.focus.rot.y = CLAMP(temp2, -temp1, temp1) + this->actor.shape.rot.y;
+    }
+
+    if (CVarGetInteger("gCameraControls.MoveWhileFirstPerson", 0)) {
+        f32 movementSpeed = LINK_IS_ADULT ? 9.0f : 8.25f;
+
+        f32 relX = (sPlayerControlInput->rel.stick_x / 10 * -invertXAxisMulti);
+        f32 relY = (sPlayerControlInput->rel.stick_y / 10);
+
+        // Normalize so that diagonal movement isn't faster
+        f32 relMag = sqrtf((relX * relX) + (relY * relY));
+        if (relMag > 1.0f) {
+            relX /= relMag;
+            relY /= relMag;
+        }
+
+        // Determine what left and right mean based on camera angle
+        f32 relX2 = relX * Math_CosS(this->actor.focus.rot.y) + relY * Math_SinS(this->actor.focus.rot.y);
+        f32 relY2 = relY * Math_CosS(this->actor.focus.rot.y) - relX * Math_SinS(this->actor.focus.rot.y);
+
+        this->actor.world.pos.x += (relX2 * movementSpeed) + this->actor.colChkInfo.displacement.x;
+        this->actor.world.pos.z += (relY2 * movementSpeed) + this->actor.colChkInfo.displacement.z;
+    }
+
+    this->unk_AA6 |= 2;
     return func_80832754(this, (play->bButtonAmmoPlusOne != 0) || func_800B7128(this) || func_8082EF20(this));
 }
 
