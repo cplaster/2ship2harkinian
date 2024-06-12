@@ -77,10 +77,13 @@ void ArmsHook_Destroy(Actor* thisx, PlayState* play) {
 
 void ArmsHook_Wait(ArmsHook* this, PlayState* play) {
     if (this->actor.parent == NULL) {
+        Player* player = GET_PLAYER(play);
+        // get correct timer length for hookshot or longshot
+        s32 length = ((player->heldItemAction == PLAYER_IA_HOOKSHOT) ? 13 : 26) * CVarGetFloat("gCheats.HookshotReachMultiplier", 1.0f);
         ArmsHook_SetupAction(this, ArmsHook_Shoot);
         Actor_SetSpeeds(&this->actor, 20.0f);
         this->actor.parent = &GET_PLAYER(play)->actor;
-        this->timer = 26;
+        this->timer = length;
     }
 }
 
