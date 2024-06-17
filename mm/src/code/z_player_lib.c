@@ -44,6 +44,8 @@
 // Assets for other actors
 #include "overlays/actors/ovl_En_Arrow/z_en_arrow.h"
 
+#include "2s2h/Enhancements/GameInteractor/GameInteractor.h"
+
 void PlayerCall_Init(Actor* thisx, PlayState* play);
 void PlayerCall_Destroy(Actor* thisx, PlayState* play);
 void PlayerCall_Update(Actor* thisx, PlayState* play);
@@ -1980,6 +1982,10 @@ void Player_DrawHookshotReticle(PlayState* play, Player* player, f32 hookshotDis
     Vec3f sp7C;
     Vec3f sp70;
     Vec3f pos;
+
+    if (GameInteractor_Should(GI_VB_ENABLE_HOOKSHOT_DISTANCE_MULTIPLIER, false, NULL)) {
+        hookshotDistance *= CVarGetFloat("gCheats.HookshotDistanceMultiplier", 1.0f);
+    }
 
     D_801C094C.z = 0.0f;
     Matrix_MultVec3f(&D_801C094C, &sp7C);

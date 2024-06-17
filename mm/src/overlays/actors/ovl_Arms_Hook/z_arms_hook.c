@@ -81,6 +81,10 @@ void ArmsHook_Wait(ArmsHook* this, PlayState* play) {
         Actor_SetSpeeds(&this->actor, 20.0f);
         this->actor.parent = &GET_PLAYER(play)->actor;
         this->timer = 26;
+
+        if (GameInteractor_Should(GI_VB_ENABLE_HOOKSHOT_DISTANCE_MULTIPLIER, false, NULL)) {
+            this->timer = 26 * CVarGetFloat("gCheats.HookshotDistanceMultiplier", 1.0f);
+        }
     }
 }
 

@@ -12,6 +12,7 @@ void InitEnhancements() {
     RegisterMoonJumpOnL();
     RegisterUnbreakableRazorSword();
     RegisterUnrestrictedItems();
+    RegisterHookshotDistance();
 
     // Clock
     RegisterTextBasedClock();

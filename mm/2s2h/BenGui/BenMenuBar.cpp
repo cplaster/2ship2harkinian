@@ -664,6 +664,9 @@ void DrawCheatsMenu() {
                                     { .tooltip = "Holding L makes you float into the air" })) {
             RegisterMoonJumpOnL();
         }
+        UIWidgets::CVarSliderFloat("Hookshot Distance Multiplier", "gCheats.HookshotDistanceMultiplier", 0.0f, 5.0f,
+                                   1.0f);
+
 
         ImGui::EndMenu();
     }
