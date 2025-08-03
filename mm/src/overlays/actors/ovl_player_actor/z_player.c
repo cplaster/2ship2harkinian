@@ -52,6 +52,9 @@
 
 #define THIS ((Player*)thisx)
 
+bool gWalkSpeedToggle;
+bool gSwimSpeedToggle;
+
 void Player_Init(Actor* thisx, PlayState* play);
 void Player_Destroy(Actor* thisx, PlayState* play);
 void Player_Update(Actor* thisx, PlayState* play);
@@ -12099,6 +12102,14 @@ void Player_UpdateCommon(Player* this, PlayState* play, Input* input) {
     f32 temp_fv1;
 
     sPlayerControlInput = input;
+
+    //fixme: hack to inject M1 and M2 buttons
+
+    //this just flips the toggle for M2
+
+    auto speedFlip = CHECK_BTN_ALL(input->cur.button, BTN_MODIFIER2);
+    gWalkSpeedToggle = speedFlip;
+
     if (this->unk_D6A < 0) {
         this->unk_D6A++;
         if (this->unk_D6A == 0) {
@@ -14632,6 +14643,14 @@ void Player_Action_13(Player* this, PlayState* play) {
 
     if (GameInteractor_Should(VB_CONSIDER_BUNNY_HOOD_EQUIPPED, this->currentMask == PLAYER_MASK_BUNNY, this)) {
         speedTarget *= 1.5f;
+    }
+
+    //fixme: cplaster - I think this is where to modify speed
+    int i = 0;
+    if (gWalkSpeedToggle) {
+        speedTarget *= CVarGetFloat("WalkModifier.Mapping2", 1.0f);
+    } else {
+        speedTarget *= CVarGetFloat("WalkModifier.Mapping1", 1.0f);
     }
 
     if (!func_8083A4A4(this, &speedTarget, &yawTarget, REG(43) / 100.0f)) {

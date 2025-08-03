@@ -6,6 +6,8 @@
 #include "utils/StringHelper.h"
 #ifndef __WIIU__
 #include "controller/controldevice/controller/mapping/sdl/SDLAxisDirectionToButtonMapping.h"
+#include "UIWidgets.hpp"
+#include "BenGui.hpp"
 #endif
 
 #define SCALE_IMGUI_SIZE(value) ((value / 13.0f) * ImGui::GetFontSize())
@@ -22,6 +24,7 @@ void BenInputEditorWindow::InitElement() {
 
     mButtonsBitmasks = { BTN_A, BTN_B, BTN_START, BTN_L, BTN_R, BTN_Z, BTN_CUP, BTN_CDOWN, BTN_CLEFT, BTN_CRIGHT };
     mDpadBitmasks = { BTN_DUP, BTN_DDOWN, BTN_DLEFT, BTN_DRIGHT };
+    mModifierButtonsBitmasks = { BTN_MODIFIER1, BTN_MODIFIER2 };
 
     addButtonName(BTN_A, "A");
     addButtonName(BTN_B, "B");
@@ -216,7 +219,7 @@ void BenInputEditorWindow::DrawButtonLineAddMappingButton(uint8_t port, N64Butto
         ImGui::OpenPopup(popupId.c_str());
         OffsetMappingPopup();
     };
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();   
 
     if (ImGui::BeginPopup(popupId.c_str())) {
         mInputEditorPopupOpen = true;
@@ -1394,6 +1397,63 @@ void BenInputEditorWindow::DrawPortTabContents(uint8_t portIndex) {
 
     if (ImGui::CollapsingHeader("LEDs")) {
         DrawLEDSection(portIndex);
+    }
+
+    if (ImGui::CollapsingHeader("Modifier Buttons")) {
+        DrawButtonLine("M1", portIndex, BTN_MODIFIER1);
+        DrawButtonLine("M2", portIndex, BTN_MODIFIER2);
+        ImGui::BeginDisabled(CVarGetInteger("DisableChanges", 0));
+        UIWidgets::CVarCheckbox(
+            "Enable speed modifiers", "WalkModifier.Enabled",
+            UIWidgets::CheckboxOptions()
+                .Color(THEME_COLOR)
+                .Tooltip("Hold the assigned button to change the maximum walking or swimming speed"));
+        if (CVarGetInteger("WalkModifier.Enabled", 0)) {
+            UIWidgets::Spacer(5);
+            Ship::GuiWindow::BeginGroupPanel("Speed Modifier", ImGui::GetContentRegionAvail());
+            UIWidgets::CVarCheckbox("Toggle modifier instead of holding", "WalkModifier.SpeedToggle",
+                                    UIWidgets::CheckboxOptions().Color(THEME_COLOR));
+            Ship::GuiWindow::BeginGroupPanel("Walk Modifier", ImGui::GetContentRegionAvail());
+            UIWidgets::CVarCheckbox("Don't affect jump distance/velocity", "WalkModifier.DoesntChangeJump",
+                                    UIWidgets::CheckboxOptions().Color(THEME_COLOR));
+            UIWidgets::CVarSliderFloat("Walk Modifier 1: %.0f %%", "WalkModifier.Mapping1",
+                                       UIWidgets::FloatSliderOptions()
+                                           .Color(THEME_COLOR)
+                                           .IsPercentage()
+                                           .Min(0.0f)
+                                           .Max(5.0f)
+                                           .DefaultValue(1.0f)
+                                           .ShowButtons(true));
+            UIWidgets::CVarSliderFloat("Walk Modifier 2: %.0f %%", "WalkModifier.Mapping2",
+                                       UIWidgets::FloatSliderOptions()
+                                           .Color(THEME_COLOR)
+                                           .IsPercentage()
+                                           .Min(0.0f)
+                                           .Max(5.0f)
+                                           .DefaultValue(1.0f)
+                                           .ShowButtons(true));
+            Ship::GuiWindow::EndGroupPanel(0);
+            Ship::GuiWindow::BeginGroupPanel("Swim Modifier", ImGui::GetContentRegionAvail());
+            UIWidgets::CVarSliderFloat("Swim Modifier 1: %.0f %%", "WalkModifier.SwimMapping1",
+                                       UIWidgets::FloatSliderOptions()
+                                           .Color(THEME_COLOR)
+                                           .IsPercentage()
+                                           .Min(0.0f)
+                                           .Max(5.0f)
+                                           .DefaultValue(1.0f)
+                                           .ShowButtons(true));
+            UIWidgets::CVarSliderFloat("Swim Modifier 2: %.0f %%", "WalkModifier.SwimMapping2",
+                                       UIWidgets::FloatSliderOptions()
+                                           .Color(THEME_COLOR)
+                                           .IsPercentage()
+                                           .Min(0.0f)
+                                           .Max(5.0f)
+                                           .DefaultValue(1.0f)
+                                           .ShowButtons(true));
+            Ship::GuiWindow::EndGroupPanel(0);
+            Ship::GuiWindow::EndGroupPanel(0);
+        }
+        ImGui::EndDisabled();
     }
 
     ImGui::PopStyleColor();

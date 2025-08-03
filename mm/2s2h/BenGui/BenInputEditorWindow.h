@@ -63,6 +63,8 @@ class BenInputEditorWindow : public Ship::GuiWindow {
     void DrawRemoveLEDMappingButton(uint8_t port, std::string id);
     void DrawAddLEDMappingButton(uint8_t port);
 
+    void DrawModifierButtonsSection(uint8_t port);
+
     void DrawGyroSection(uint8_t port);
     void DrawRemoveGyroMappingButton(uint8_t port, std::string id);
     void DrawAddGyroMappingButton(uint8_t port);
@@ -95,6 +97,7 @@ class BenInputEditorWindow : public Ship::GuiWindow {
     void DrawPortTab(uint8_t portIndex);
     std::set<N64ButtonMask> mButtonsBitmasks;
     std::set<N64ButtonMask> mDpadBitmasks;
+    std::set<N64ButtonMask> mModifierButtonsBitmasks;
     bool mInputEditorPopupOpen;
     void DrawSetDefaultsButton(uint8_t portIndex);
     void DrawClearAllButton(uint8_t portIndex);
