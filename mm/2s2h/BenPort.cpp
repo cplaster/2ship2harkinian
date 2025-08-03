@@ -331,6 +331,7 @@ struct ExtensionEntry {
 ImFont* OTRGlobals::CreateFontWithSize(float size, std::string fontPath) {
     auto mImGuiIo = &ImGui::GetIO();
     ImFont* font;
+
     if (fontPath == "") {
         ImFontConfig fontCfg = ImFontConfig();
         fontCfg.OversampleH = fontCfg.OversampleV = 1;
